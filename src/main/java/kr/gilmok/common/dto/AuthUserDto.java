@@ -1,4 +1,4 @@
-package dto;
+package kr.gilmok.common.dto;
 
 public class AuthUserDto {
 }
