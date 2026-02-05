@@ -1,4 +1,4 @@
-package exception;
+package kr.gilmok.common.exception;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

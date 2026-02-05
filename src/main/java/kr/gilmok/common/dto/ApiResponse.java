@@ -1,4 +1,4 @@
-package dto;
+package kr.gilmok.common.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
