@@ -29,6 +29,7 @@ dependencies {
 
     api 'com.fasterxml.jackson.core:jackson-databind'
     api 'org.springframework.boot:spring-boot-starter-validation' // @NotNull 등
+    api 'org.springframework.boot:spring-boot-starter-web'
 
     // 2. JWT (jjwt)
     api 'io.jsonwebtoken:jjwt-api:0.11.5'
