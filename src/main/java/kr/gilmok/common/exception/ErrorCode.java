@@ -1,16 +1,9 @@
 package kr.gilmok.common.exception;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 
-@Getter
-@RequiredArgsConstructor
-public enum ErrorCode {
-    // 예시
-    INVALID_INPUT(400, "C001", "잘못된 입력입니다."),
-    UNAUTHORIZED(401, "C002", "인증이 필요합니다.");
-
-    private final int status;
-    private final String code;
-    private final String message;
+public interface ErrorCode {
+    HttpStatus getHttpStatus(); // e.g., HttpStatus.BAD_REQUEST
+    String getCode();           // e.g., "C001"
+    String getMessage();        // e.g., "잘못된 입력입니다."
 }
