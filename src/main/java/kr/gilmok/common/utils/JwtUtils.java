@@ -2,6 +2,8 @@ package kr.gilmok.common.utils;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import kr.gilmok.common.exception.CustomException;
+import kr.gilmok.common.exception.GlobalErrorCode;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
@@ -39,5 +41,10 @@ public class JwtUtils {
 
     private static Key getSigningKey(String secretKey) {
         byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
+        if (keyBytes.length < 32) {
+            throw new CustomException(GlobalErrorCode.NOT_ENOUGH_KEY_LENGTH);
+        }
+
         return Keys.hmacShaKeyFor(keyBytes);
-    }}
+    }
+}
