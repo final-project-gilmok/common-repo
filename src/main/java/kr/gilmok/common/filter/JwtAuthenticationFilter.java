@@ -36,14 +36,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = resolveToken(request);
 
         // 2. 토큰 유효성 검사 (common 모듈의 JwtUtils 활용)
-        if (token != null && JwtUtils.validateToken(token, secretKey)) {
-            // 3. 토큰이 유효하면 인증 객체 생성
-            Authentication authentication = getAuthentication(token);
-            // 4. SecurityContext에 인증 정보 저장
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            log.debug("Security Context에 '{}' 인증 정보를 저장했습니다.", authentication.getName());
+        try {
+            if (token != null && JwtUtils.validateToken(token, secretKey)) {
+                // 3. 토큰이 유효하면 인증 객체 생성
+                Authentication authentication = getAuthentication(token);
+                // 4. SecurityContext에 인증 정보 저장
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                log.debug("Security Context에 '{}' 인증 정보를 저장했습니다.", authentication.getName());
+            }
+        } catch (Exception e) {
+            log.error("JWT 인증 에러: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
         }
-
         filterChain.doFilter(request, response);
     }
 
