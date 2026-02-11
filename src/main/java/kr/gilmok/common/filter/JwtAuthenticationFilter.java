@@ -71,6 +71,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         AuthUserDto authUserDto = new AuthUserDto(
                 id,
                 username,
+                null,
                 role,
                 status
         );
