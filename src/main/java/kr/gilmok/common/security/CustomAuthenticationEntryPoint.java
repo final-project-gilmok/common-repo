@@ -6,7 +6,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import kr.gilmok.common.dto.ErrorResponse;
 import kr.gilmok.common.exception.GlobalErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +29,10 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
         // ErrorResponse 객체 생성
         ErrorResponse errorResponse = ErrorResponse.of(GlobalErrorCode.UNAUTHORIZED);
+
+        if (authException instanceof BadCredentialsException || authException instanceof UsernameNotFoundException) {
+            errorResponse = ErrorResponse.of(GlobalErrorCode.INVALID_USER);
+        }
 
         // json 변환하여 body 출력
         String json = objectMapper.writeValueAsString(errorResponse);

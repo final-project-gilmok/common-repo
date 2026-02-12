@@ -12,6 +12,7 @@ public enum GlobalErrorCode implements ErrorCode {
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "C002", "인증이 필요합니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "C000", "서버 내부 오류입니다."),
     NOT_ENOUGH_KEY_LENGTH(HttpStatus.INTERNAL_SERVER_ERROR, "C003", "JWT 시크릿은 최소 256비트(32바이트)여야 합니다."),
+    INVALID_USER(HttpStatus.UNAUTHORIZED, "U001", "유효하지 않은 회원 정보입니다."),
     ;
 
     private final HttpStatus httpStatus;
