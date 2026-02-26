@@ -1,6 +1,7 @@
 package kr.gilmok.common.filter;
 
 import io.jsonwebtoken.Claims;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,6 +29,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Value("${app.jwt.secret}")
     private String secretKey;
 
+    private final MeterRegistry meterRegistry; // ⭐️ 추가: 메트릭 수집기 주입
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -43,6 +46,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // 4. SecurityContext에 인증 정보 저장
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 log.debug("Security Context에 '{}' 인증 정보를 저장했습니다.", authentication.getName());
+
+                // ✅ [추가] 토큰 검증 성공 메트릭 1 증가
+                // 프로메테우스에는 token_validation_total{result="success"} 로 저장됩니다.
+                meterRegistry.counter("token.validation", "result", "success").increment();
             }
         } catch (Exception e) {
             log.error("JWT 인증 에러: {}", e.getMessage());

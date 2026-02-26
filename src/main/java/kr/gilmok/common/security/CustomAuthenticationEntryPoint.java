@@ -1,6 +1,7 @@
 package kr.gilmok.common.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import kr.gilmok.common.dto.ErrorResponse;
@@ -21,11 +22,16 @@ import java.io.IOException;
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     private final ObjectMapper objectMapper;
+    private final MeterRegistry meterRegistry; // ⭐️ 추가: 메트릭 수집기 주입
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
 
         log.warn("Unauthorized Access Attempt - URI: [{}], Message: [{}]", request.getRequestURI(), authException.getMessage());
+
+        // ✅ [추가] 토큰 검증 실패 (또는 인증 없는 접근) 메트릭 1 증가
+        // 프로메테우스에는 token_validation_total{result="failure"} 로 저장됩니다.
+        meterRegistry.counter("token.validation", "result", "failure").increment();
 
         // 401 Unauthorized 응답 설정
         response.setContentType("application/json;charset=UTF-8");
