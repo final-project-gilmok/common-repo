@@ -35,26 +35,46 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 1. Request Header에서 토큰 추출
+        String uri = request.getRequestURI();
+        String method = request.getMethod();
+
         String token = resolveToken(request);
 
-        // 2. 토큰 유효성 검사 (common 모듈의 JwtUtils 활용)
-        try {
-            if (token != null && JwtUtils.validateToken(token, secretKey)) {
-                // 3. 토큰이 유효하면 인증 객체 생성
-                Authentication authentication = getAuthentication(token);
-                // 4. SecurityContext에 인증 정보 저장
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-                log.debug("Security Context에 '{}' 인증 정보를 저장했습니다.", authentication.getName());
-
-                // ✅ [추가] 토큰 검증 성공 메트릭 1 증가
-                // 프로메테우스에는 token_validation_total{result="success"} 로 저장됩니다.
-                meterRegistry.counter("token.validation", "result", "success").increment();
-            }
-        } catch (Exception e) {
-            log.error("JWT 인증 에러: {}", e.getMessage());
-            SecurityContextHolder.clearContext();
+        // 이미 인증이 있으면 스킵
+        if (SecurityContextHolder.getContext().getAuthentication() != null) {
+            filterChain.doFilter(request, response);
+            return;
         }
+
+        try {
+            if (token == null) {
+                log.debug("JWT 없음: {} {}", method, uri);
+                meterRegistry.counter("token.validation", "result", "missing").increment();
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            boolean valid = JwtUtils.validateToken(token, secretKey);
+            log.debug("JWT 존재: {} {} valid={}", method, uri, valid);
+
+            if (!valid) {
+                meterRegistry.counter("token.validation", "result", "invalid").increment();
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            Authentication authentication = getAuthentication(token);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            log.debug("SecurityContext 인증 세팅: name={}, uri={}", authentication.getName(), uri);
+
+            meterRegistry.counter("token.validation", "result", "success").increment();
+
+        } catch (Exception e) {
+            log.error("JWT 인증 에러: uri={} msg={}", uri, e.getMessage(), e);
+            SecurityContextHolder.clearContext();
+            meterRegistry.counter("token.validation", "result", "error").increment();
+        }
+
         filterChain.doFilter(request, response);
     }
 
