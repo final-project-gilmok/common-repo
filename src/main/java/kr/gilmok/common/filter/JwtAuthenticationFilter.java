@@ -84,13 +84,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if ("accessToken".equals(cookie.getName())) {
-                    return cookie.getValue();
+                    String value = cookie.getValue();
+                    return (value == null || value.trim().isEmpty()) ? null : value;
                 }
             }
         }
         return null;
     }
-   // 토큰의 Claims를 이용해 Authentication 객체 생성
+
+    // 토큰의 Claims를 이용해 Authentication 객체 생성
     private Authentication getAuthentication(String token) {
         Claims claims = JwtUtils.extractClaims(token, secretKey);
         Long id = claims.get("id", Long.class);
