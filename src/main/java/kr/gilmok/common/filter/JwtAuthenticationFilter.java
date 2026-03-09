@@ -97,8 +97,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         Claims claims = JwtUtils.extractClaims(token, secretKey);
         Long id = claims.get("id", Long.class);
         String username = claims.getSubject();
-        String status = claims.get("status").toString();
-        String role = claims.get("role").toString();
+        String status = claims.get("status", String.class);
+        String role = claims.get("role", String.class);
 
         AuthUserDto authUserDto = new AuthUserDto(
                 id,
