@@ -117,7 +117,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         if (!"ACTIVE".equals(status)) {
-            throw new CustomException(GlobalErrorCode.INVALID_USER);
+            throw new CustomException(GlobalErrorCode.INACTIVATED_USER);
         }
 
         AuthUserDto authUserDto = new AuthUserDto(
@@ -135,7 +135,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private void sendErrorResponse(HttpServletResponse response, CustomException e) throws IOException {
         response.setContentType("application/json;charset=UTF-8");
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setStatus(e.getErrorCode().getHttpStatus().value());
 
         ErrorResponse errorResponse = ErrorResponse.of(e.getErrorCode());
         String json = objectMapper.writeValueAsString(errorResponse);
