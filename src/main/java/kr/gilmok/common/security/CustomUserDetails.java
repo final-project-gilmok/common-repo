@@ -12,7 +12,8 @@ public record CustomUserDetails(AuthUserDto user) implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(user.role()));
+        String role = (user.role() == null || user.role().isBlank()) ? "ROLE_USER" : user.role();
+        return List.of(new SimpleGrantedAuthority(role));
     }
 
     @Override

@@ -8,6 +8,8 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import kr.gilmok.common.dto.AuthUserDto;
+import kr.gilmok.common.exception.CustomException;
+import kr.gilmok.common.exception.GlobalErrorCode;
 import kr.gilmok.common.security.CustomUserDetails;
 import kr.gilmok.common.utils.JwtUtils;
 import lombok.RequiredArgsConstructor;
@@ -99,6 +101,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String username = claims.getSubject();
         String status = claims.get("status", String.class);
         String role = claims.get("role", String.class);
+
+        if (status == null || role == null) {
+            throw new CustomException(GlobalErrorCode.INVALID_USER);
+        }
 
         AuthUserDto authUserDto = new AuthUserDto(
                 id,
