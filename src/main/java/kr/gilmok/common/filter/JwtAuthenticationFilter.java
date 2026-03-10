@@ -8,10 +8,12 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import kr.gilmok.common.dto.AuthUserDto;
+import kr.gilmok.common.dto.ErrorResponse;
 import kr.gilmok.common.exception.CustomException;
 import kr.gilmok.common.exception.GlobalErrorCode;
 import kr.gilmok.common.security.CustomUserDetails;
 import kr.gilmok.common.utils.JwtUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Value("${app.jwt.secret}")
     private String secretKey;
 
+    private final ObjectMapper objectMapper;
     private final MeterRegistry meterRegistry; // ⭐️ 추가: 메트릭 수집기 주입
 
     @Override
@@ -71,6 +74,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             meterRegistry.counter("token.validation", "result", "success").increment();
 
+        } catch (CustomException e) {
+            log.error("JWT CustomException: uri={} code={} msg={}", uri, e.getErrorCode().getCode(), e.getMessage());
+            SecurityContextHolder.clearContext();
+            meterRegistry.counter("token.validation", "result", "error").increment();
+            sendErrorResponse(response, e);
+            return; // 요청 중단
+
         } catch (Exception e) {
             log.error("JWT 인증 에러: uri={} msg={}", uri, e.getMessage(), e);
             SecurityContextHolder.clearContext();
@@ -102,7 +112,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String status = claims.get("status", String.class);
         String role = claims.get("role", String.class);
 
-        if (status == null || role == null) {
+        if (status == null || role == null || role.isBlank()) {
             throw new CustomException(GlobalErrorCode.INVALID_USER);
         }
 
@@ -111,11 +121,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 username,
                 "",
                 role,
-                status
-        );
+                status);
 
         CustomUserDetails principal = new CustomUserDetails(authUserDto);
 
         return new UsernamePasswordAuthenticationToken(principal, token, principal.getAuthorities());
+    }
+
+    private void sendErrorResponse(HttpServletResponse response, CustomException e) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+        ErrorResponse errorResponse = ErrorResponse.of(e.getErrorCode());
+        String json = objectMapper.writeValueAsString(errorResponse);
+        response.getWriter().write(json);
     }
 }
