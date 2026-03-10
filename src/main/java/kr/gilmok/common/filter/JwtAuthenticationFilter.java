@@ -1,5 +1,6 @@
 package kr.gilmok.common.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.FilterChain;
@@ -13,7 +14,6 @@ import kr.gilmok.common.exception.CustomException;
 import kr.gilmok.common.exception.GlobalErrorCode;
 import kr.gilmok.common.security.CustomUserDetails;
 import kr.gilmok.common.utils.JwtUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -116,12 +116,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throw new CustomException(GlobalErrorCode.INVALID_USER);
         }
 
+        if (!"ACTIVE".equals(status)) {
+            throw new CustomException(GlobalErrorCode.INVALID_USER);
+        }
+
         AuthUserDto authUserDto = new AuthUserDto(
                 id,
                 username,
                 "",
                 role,
-                status);
+                status
+        );
 
         CustomUserDetails principal = new CustomUserDetails(authUserDto);
 
