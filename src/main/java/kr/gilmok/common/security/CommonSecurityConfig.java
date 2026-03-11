@@ -1,5 +1,6 @@
 package kr.gilmok.common.security;
 
+import jakarta.servlet.Filter;
 import kr.gilmok.common.filter.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -12,6 +13,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
+import java.util.Collections;
+import java.util.List;
+
 @RequiredArgsConstructor
 public abstract class CommonSecurityConfig {
 
@@ -20,6 +24,11 @@ public abstract class CommonSecurityConfig {
 
     protected abstract void configureRequestMatchers(
             AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth);
+
+
+    protected List<Filter> getFiltersAfterJwtAuthentication() {
+        return Collections.emptyList();
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -39,6 +48,10 @@ public abstract class CommonSecurityConfig {
                     auth.anyRequest().authenticated();
                 })
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        for (Filter filter : getFiltersAfterJwtAuthentication()) {
+            http.addFilterAfter(filter, JwtAuthenticationFilter.class);
+        }
 
         return http.build();
     }
