@@ -26,15 +26,23 @@ public class AccessTokenBlocklistRepositoryImpl implements AccessTokenBlocklistR
         }
 
         redisTemplate.opsForValue().set(
-                KEY_PREFIX + jti,
+                buildKey(jti),
                 "1",
                 ttlMs,
                 TimeUnit.MILLISECONDS
         );
     }
 
+    private String buildKey(String jti) {
+        if (jti == null || jti.isBlank()) {
+            throw new IllegalArgumentException("jti must not be null or blank");
+        }
+        return KEY_PREFIX + jti;
+    }
+
     @Override
     public boolean isBlocked(String jti) {
-        return Boolean.TRUE.equals(redisTemplate.hasKey(KEY_PREFIX + jti));
+        if (jti == null || jti.isBlank()) return false;
+        return Boolean.TRUE.equals(redisTemplate.hasKey(buildKey(jti)));
     }
 }
