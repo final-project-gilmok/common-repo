@@ -57,12 +57,6 @@ public class AccessTokenBlocklistFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 이미 인증 컨텍스트가 없으면 통과 (JwtAuthenticationFilter에서 처리됨)
-        if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         String accessToken = resolveAccessTokenFromCookie(request);
         if (accessToken == null) {
             filterChain.doFilter(request, response);
