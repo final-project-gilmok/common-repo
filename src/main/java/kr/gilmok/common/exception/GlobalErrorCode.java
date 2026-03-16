@@ -13,7 +13,10 @@ public enum GlobalErrorCode implements ErrorCode {
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "C000", "서버 내부 오류입니다."),
     NOT_ENOUGH_KEY_LENGTH(HttpStatus.INTERNAL_SERVER_ERROR, "C003", "JWT 시크릿은 최소 256비트(32바이트)여야 합니다."),
     INVALID_USER(HttpStatus.UNAUTHORIZED, "U001", "유효하지 않은 회원 정보입니다."),
-    INACTIVATED_USER(HttpStatus.FORBIDDEN, "U002", "비활성화된 회원 입니다.")
+    INACTIVATED_USER(HttpStatus.FORBIDDEN, "U002", "비활성화된 회원 입니다."),
+    
+    // 토큰 관련 공통 에러
+    ACCESS_TOKEN_BLOCKED(HttpStatus.UNAUTHORIZED, "AT004", "로그아웃된 토큰입니다. 다시 로그인해주세요.")
     ;
 
     private final HttpStatus httpStatus;

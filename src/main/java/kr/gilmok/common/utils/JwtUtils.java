@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.util.Date;
 
 @Slf4j
 public class JwtUtils {
@@ -37,6 +38,16 @@ public class JwtUtils {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    public static String extractJti(String token, String secretKey) {
+        return extractClaims(token, secretKey).getId();
+    }
+
+    public static long getRemainingTtlMs(String token, String secretKey) {
+        Date expiration = extractClaims(token, secretKey).getExpiration();
+        long remaining = expiration.getTime() - System.currentTimeMillis();
+        return Math.max(0, remaining);
     }
 
     private static Key getSigningKey(String secretKey) {
