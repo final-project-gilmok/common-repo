@@ -78,8 +78,10 @@ public class AccessTokenBlocklistFilter extends OncePerRequestFilter {
                 sendErrorResponse(response);
                 return;
             }
+        } catch (io.jsonwebtoken.JwtException e) {
+            log.debug("[Blocklist] JWT 파싱 실패 (만료/잘못된 토큰): {}", e.getMessage());
         } catch (Exception e) {
-            log.debug("[Blocklist] jti 추출 실패: {}", e.getMessage());
+            log.warn("[Blocklist] 예상치 못한 오류 발생: {}", e.getMessage(), e);
         }
 
         filterChain.doFilter(request, response);
