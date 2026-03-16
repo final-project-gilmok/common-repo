@@ -12,7 +12,7 @@ import kr.gilmok.common.utils.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
+
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -74,14 +74,18 @@ public class AccessTokenBlocklistFilter extends OncePerRequestFilter {
             if (jti != null && accessTokenBlocklistRepository.isBlocked(jti)) {
                 log.warn("[Blocklist] 로그아웃된 토큰 접근 차단 - jti: {}", jti);
                 SecurityContextHolder.clearContext();
-
-                sendErrorResponse(response);
+                sendErrorResponse(response, GlobalErrorCode.ACCESS_TOKEN_BLOCKED);
                 return;
             }
         } catch (io.jsonwebtoken.JwtException e) {
             log.debug("[Blocklist] JWT 파싱 실패 (만료/잘못된 토큰): {}", e.getMessage());
         } catch (Exception e) {
-            log.warn("[Blocklist] 예상치 못한 오류 발생: {}", e.getMessage(), e);
+            // [정책 결정] Fail-Closed: Redis 장애 등으로 블랙리스트 조회가 실패할 경우, 
+            // 보안을 위해 요청을 거부함.
+            log.error("[Blocklist] 보안 시스템 장애 - 요청을 거부합니다. Error: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
+            sendErrorResponse(response, GlobalErrorCode.SECURITY_SYSTEM_ERROR);
+            return;
         }
 
         filterChain.doFilter(request, response);
@@ -97,11 +101,11 @@ public class AccessTokenBlocklistFilter extends OncePerRequestFilter {
                 .orElse(null);
     }
 
-    private void sendErrorResponse(HttpServletResponse response) throws IOException {
+    private void sendErrorResponse(HttpServletResponse response, GlobalErrorCode errorCode) throws IOException {
         response.setContentType("application/json;charset=UTF-8");
-        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setStatus(errorCode.getHttpStatus().value());
 
-        ErrorResponse errorResponse = ErrorResponse.of(GlobalErrorCode.ACCESS_TOKEN_BLOCKED);
+        ErrorResponse errorResponse = ErrorResponse.of(errorCode);
         String json = objectMapper.writeValueAsString(errorResponse);
         response.getWriter().write(json);
     }
