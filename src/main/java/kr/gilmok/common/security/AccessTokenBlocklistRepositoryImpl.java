@@ -19,7 +19,7 @@ public class AccessTokenBlocklistRepositoryImpl implements AccessTokenBlocklistR
     @Override
     public void block(String jti, long ttlMs) {
         if (ttlMs <= 0) return;
-        
+
         redisTemplate.opsForValue().set(
                 KEY_PREFIX + jti,
                 "1",
@@ -30,6 +30,6 @@ public class AccessTokenBlocklistRepositoryImpl implements AccessTokenBlocklistR
 
     @Override
     public boolean isBlocked(String jti) {
-        return redisTemplate.hasKey(KEY_PREFIX + jti);
+        return Boolean.TRUE.equals(redisTemplate.hasKey(KEY_PREFIX + jti));
     }
 }
